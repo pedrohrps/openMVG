@@ -54,6 +54,72 @@ bool checkIntrinsicStringValidity(const std::string & Kmatrix, double & focal, d
   return true;
 }
 
+/// Recursively list all files from a folder
+bool listFiles(std::string& folder, std::vector<std::string>& files)
+{
+  std::vector<std::string> vec_folders = stlplus::folder_all(folder);
+  for(std::vector<std::string>::const_iterator it = vec_folders.begin(); it != vec_folders.end(); ++it)
+  {
+      const std::string item = *it;
+      std::string itemPath = stlplus::create_filespec(folder, item);
+      if(stlplus::is_file(itemPath))
+        files.push_back(itemPath);
+      else if (stlplus::is_folder(itemPath))
+        listFiles(itemPath, files);
+  }
+}
+
+/// Retrieve resources path from a json file
+/// Need a "resource" variable in the json
+bool retrieveResources(const std::string& jsonFile, std::vector<std::string>& vec_imagePaths)
+{
+  if(!stlplus::file_exists(jsonFile))
+  {
+    std::cerr << "File \"" << jsonFile << "\" does not exists." << std::endl;
+    return false;
+  }
+
+  // Read file
+  std::ifstream jsonStream(jsonFile.c_str(), std::ifstream::binary);
+  if(jsonStream)
+  {
+    // get length of file:
+    jsonStream.seekg (0, jsonStream.end);
+    int length = jsonStream.tellg();
+    jsonStream.seekg (0, jsonStream.beg);
+    // read data as a block:
+    char * jsonChar = new char [length];
+    jsonStream.read(jsonChar,length);
+    jsonStream.close();
+    if(!jsonStream)
+    {
+      std::cerr << "Error when reading file." << std::endl;
+      return false;
+    }
+    // Parse json
+    rapidjson::Document document;
+    document.Parse<0>(jsonChar);
+    if(!document.IsObject())
+    {
+      std::cerr << "File \"" << jsonFile << "\" is not in json format." << std::endl;
+      delete[] jsonChar;
+      return false;
+    }
+    if(!document.HasMember("resources"))
+    {
+      std::cerr << "No member \"resources\" in json file" << std::endl;
+      delete[] jsonChar;
+      return false;
+    }
+    rapidjson::Value& resourcesValue = document["resources"];
+    for(rapidjson::Value::ConstValueIterator it = resourcesValue.Begin(); it != resourcesValue.End(); it++)
+      vec_imagePaths.push_back(it->GetString());
+
+    delete[] jsonChar;
+    return true;
+  }
+}
+
 //
 // Create the description of an input image dataset for OpenMVG toolsuite
 // - Export a SfM_Data file with View & Intrinsic data
@@ -63,6 +129,7 @@ int main(int argc, char **argv)
   CmdLine cmd;
 
   std::string sImageDir,
+    sJsonFile,
     sfileDatabase = "",
     sOutputDir = "",
     sKmatrix;
@@ -74,6 +141,7 @@ int main(int argc, char **argv)
   double focalPixPermm = -1.0;
 
   cmd.add( make_option('i', sImageDir, "imageDirectory") );
+  cmd.add( make_option('j', sJsonFile, "jsonFile") );
   cmd.add( make_option('d', sfileDatabase, "sensorWidthDatabase") );
   cmd.add( make_option('o', sOutputDir, "outputDirectory") );
   cmd.add( make_option('f', focalPixPermm, "focal") );
@@ -87,6 +155,7 @@ int main(int argc, char **argv)
   } catch(const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--imageDirectory]\n"
+      << "[-j|--jsonFile]\n"
       << "[-d|--sensorWidthDatabase]\n"
       << "[-o|--outputDirectory]\n"
       << "[-f|--focal] (pixels)\n"
@@ -107,6 +176,7 @@ int main(int argc, char **argv)
   std::cout << " You called : " <<std::endl
             << argv[0] << std::endl
             << "--imageDirectory " << sImageDir << std::endl
+            << "--jsonFile " << sJsonFile << std::endl
             << "--sensorWidthDatabase " << sfileDatabase << std::endl
             << "--outputDirectory " << sOutputDir << std::endl
             << "--focal " << focalPixPermm << std::endl
@@ -119,12 +189,16 @@ int main(int argc, char **argv)
 
   const EINTRINSIC e_User_camera_model = EINTRINSIC(i_User_camera_model);
 
-  if ( !stlplus::folder_exists( sImageDir ) )
+  if(!sImageDir.empty() && !sJsonFile.empty())
+  {
+    std::cerr << "\nCannot combine -i and -j options" << std::endl;
+    return EXIT_FAILURE;
+  }
+  if ( !sImageDir.empty() && !stlplus::folder_exists( sImageDir ) )
   {
     std::cerr << "\nThe input directory doesn't exist" << std::endl;
     return EXIT_FAILURE;
   }
-
   if (sOutputDir.empty())
   {
     std::cerr << "\nInvalid output directory" << std::endl;
@@ -163,12 +237,35 @@ int main(int argc, char **argv)
     }
   }
 
-  std::vector<std::string> vec_image = stlplus::folder_files( sImageDir );
+  // Retrieve image paths
+  std::vector<std::string> vec_image;
+  if (!sJsonFile.empty())
+  {
+    // Retrieve resources from json file
+    std::vector<std::string> vec_resources;
+    if (!retrieveResources(sJsonFile, vec_resources))
+      return EXIT_FAILURE;
+    // Retrieve images from resources
+    for(std::vector<std::string>::const_iterator it = vec_resources.begin(); it != vec_resources.end(); ++it)  
+    {
+      std::string item = *it;
+      listFiles(item, vec_image);
+    }
+    std::sort(vec_image.begin(), vec_image.end());
+  }
+  if(!sImageDir.empty())
+  {
+    vec_image = stlplus::folder_files( sImageDir );
+  }
   std::sort(vec_image.begin(), vec_image.end());
+  for(std::vector<std::string>::const_iterator it = vec_image.begin(); it != vec_image.end(); ++it)  
+    std::cout << *it << std::endl;
 
   // Configure an empty scene with Views and their corresponding cameras
   SfM_Data sfm_data;
-  sfm_data.s_root_path = sImageDir; // Setup main image root_path
+  sfm_data.s_root_path = "";
+  if(!sImageDir.empty())
+    sfm_data.s_root_path = sImageDir; // Setup main image root_path
   Views & views = sfm_data.views;
   Intrinsics & intrinsics = sfm_data.intrinsics;
 
@@ -178,8 +275,11 @@ int main(int argc, char **argv)
   {
     // Read meta data to fill camera parameter (w,h,focal,ppx,ppy) fields.
     width = height = ppx = ppy = focal = -1.0;
-
-    const std::string sImageFilename = stlplus::create_filespec( sImageDir, *iter_image );
+    std::string sImageFilename;
+    if(!sJsonFile.empty())
+      sImageFilename = *iter_image;
+    else if(!sImageDir.empty())
+      sImageFilename = stlplus::create_filespec( sImageDir, *iter_image );
 
     // Test if the image format is supported:
     if (openMVG::image::GetFormat(sImageFilename.c_str()) == openMVG::image::Unknown)
