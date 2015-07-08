@@ -12,6 +12,7 @@
 /// Feature/Regions & Image describer interfaces
 #include "openMVG/features/features.hpp"
 #include "nonFree/sift/SIFT_describer.hpp"
+#include "openMVG/features/CCTAG_describer.hpp"
 #include <cereal/archives/json.hpp>
 #include "openMVG/system/timer.hpp"
 
@@ -80,6 +81,7 @@ int main(int argc, char **argv)
       << "   SIFT (default),\n"
       << "   AKAZE_FLOAT: AKAZE with floating point descriptors,\n"
       << "   AKAZE_MLDB:  AKAZE with binary descriptors]\n"
+      << "   CCTAG\n"
       << "[-u|--upright] Use Upright feature 0 or 1\n"
       << "[-p|--describerPreset\n"
       << "  (used to control the Image_describer configuration):\n"
@@ -161,6 +163,10 @@ int main(int argc, char **argv)
     if (sImage_Describer_Method == "SIFT")
     {
       image_describer.reset(new SIFT_Image_describer(SiftParams(), !bUpRight));
+    }
+    if (sImage_Describer_Method == "CCTAG")
+    {
+      image_describer.reset(new CCTAG_Image_describer());
     }
     else
     if (sImage_Describer_Method == "AKAZE_FLOAT")
