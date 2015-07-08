@@ -216,6 +216,20 @@ MACRO (UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
 ENDMACRO (UNIT_TEST)
 
 # ==============================================================================
+# CCTag
+# ==============================================================================
+FIND_PACKAGE(CCTag)
+IF(NOT CCTAG_FOUND)
+  MESSAGE(FATAL_ERROR "CCTAG package not found")
+ELSE(NOT CCTAG_FOUND)
+  MESSAGE(STATUS "CCTAG package found")
+  MESSAGE(STATUS "CCTAG library directory ${CCTAG_LIBRARY_DIR}")
+  MESSAGE(STATUS "CCTAG library names     ${CCTAG_LIBRARIES_NAMES}")
+  MESSAGE(STATUS "CCTAG include directory ${CCTAG_INCLUDE_DIR}")
+  INCLUDE_DIRECTORIES(${CCTAG_INCLUDE_DIR})
+ENDIF(NOT CCTAG_FOUND)
+
+# ==============================================================================
 # Eigen
 # ==============================================================================
 # - internal by default,
@@ -263,6 +277,7 @@ ADD_SUBDIRECTORY(third_party)
 SET(OpenMVG_INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party
+  ${CCTAG_INCLUDE_DIR}
   ${JPEG_INCLUDE_DIR}
   ${PNG_INCLUDE_DIRS}
   ${TIFF_INCLUDE_DIR}
@@ -310,7 +325,9 @@ SET(OpenMVG_LIBRARIES
   flann_cpp_s
   ${CERES_LIBRARIES}
   lemon
-  easyexif)
+  easyexif
+  /usr/local/lib/libCCTag.so
+  ${CCTAG_LIBRARIES_NAMES})
 SET(OpenMVG_LIBRARIES "${OpenMVG_LIBRARIES}"
   ${OPENMVG_LIBRARY_DEPENDENCIES} CACHE STRING "openMVG library names")
 
