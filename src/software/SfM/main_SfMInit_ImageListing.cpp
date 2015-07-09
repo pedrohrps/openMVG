@@ -85,7 +85,7 @@ bool retrieveResources(const std::string& jsonFile, std::vector<std::string>& ve
   {
     // get length of file:
     jsonStream.seekg (0, jsonStream.end);
-    int length = jsonStream.tellg();
+    const int length = jsonStream.tellg();
     jsonStream.seekg (0, jsonStream.beg);
     // read data as a block:
     char * jsonChar = new char [length];
@@ -258,8 +258,6 @@ int main(int argc, char **argv)
     vec_image = stlplus::folder_files( sImageDir );
   }
   std::sort(vec_image.begin(), vec_image.end());
-  for(std::vector<std::string>::const_iterator it = vec_image.begin(); it != vec_image.end(); ++it)  
-    std::cout << *it << std::endl;
 
   // Configure an empty scene with Views and their corresponding cameras
   SfM_Data sfm_data;
