@@ -17,7 +17,10 @@ class CCTAG_Image_describer : public Image_describer
 {
 public:
   CCTAG_Image_describer()
-    :Image_describer(){}
+    :Image_describer(), _nRings(3) {}
+    
+  CCTAG_Image_describer(const std::size_t nRings)
+    :Image_describer(), _nRings(nRings) {}   
 
   ~CCTAG_Image_describer() {}
 
@@ -63,10 +66,10 @@ public:
     regionsCasted->Descriptors().reserve(50);
 
     cctag::View cctagView((const unsigned char *) image.data(), image.Width(), image.Height(), image.Depth()*image.Width());
-
-    cctag::Parameters params;
+    
     boost::ptr_list<cctag::ICCTag> cctags;
-    cctag::cctagDetection(cctags, 1 ,cctagView._grayView ,params);
+    
+    cctag::cctagDetection(cctags, 1 ,cctagView._grayView , _nRings);
     
     for (const auto & cctag : cctags)
     {
@@ -108,6 +111,7 @@ public:
 private:
   //SiftParams _params;
   //bool _bOrientation;
+  std::size_t _nRings;
 };
 
 } // namespace features

@@ -164,9 +164,14 @@ int main(int argc, char **argv)
     {
       image_describer.reset(new SIFT_Image_describer(SiftParams(), !bUpRight));
     }
-    if (sImage_Describer_Method == "CCTAG")
+    if (sImage_Describer_Method == "CCTAG3")
     {
-      image_describer.reset(new CCTAG_Image_describer());
+      image_describer.reset(new CCTAG_Image_describer(3));
+    }
+    else
+    if (sImage_Describer_Method == "CCTAG4")
+    {
+      image_describer.reset(new CCTAG_Image_describer(4));
     }
     else
     if (sImage_Describer_Method == "AKAZE_FLOAT")
