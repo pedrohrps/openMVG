@@ -54,7 +54,7 @@ struct GeometricFilter_FMatrix_AC
     std::pair<double,double> ACRansacOut =
       ACRANSAC(kernel, vec_inliers, m_stIteration, &F, upper_bound_precision);
 
-    if (vec_inliers.size() < KernelType::MINIMUM_SAMPLES *2.5)  {
+    if (vec_inliers.size() < KernelType::MINIMUM_SAMPLES )  {  // param@L: KernelType::MINIMUM_SAMPLES *2.5
       vec_inliers.clear();
     }
   }

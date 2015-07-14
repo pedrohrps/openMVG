@@ -119,7 +119,7 @@ bool SequentialSfMReconstructionEngine::Process() {
       {
         BundleAdjustment();
       }
-      while (badTrackRejector(4.0) != 0);
+      while (badTrackRejector(4.0) != 0); // param@L : 4.0
     }
   }
 
@@ -263,7 +263,7 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
     std::cout << std::endl << "Track filtering" << std::endl;
     tracksBuilder.Filter();
     std::cout << std::endl << "Track filtering : min occurence" << std::endl;
-    tracksBuilder.FilterPairWiseMinimumMatches(20);
+    tracksBuilder.FilterPairWiseMinimumMatches(3); // param@L : 20
     std::cout << std::endl << "Track export to internal struct" << std::endl;
     //-- Build tracks with STL compliant type :
     tracksBuilder.ExportToSTL(_map_tracks);
@@ -1046,8 +1046,8 @@ bool SequentialSfMReconstructionEngine::Resection(size_t viewIndex)
           if ( angle > 2.0 &&
                pose_1.depth(X_euclidean) > 0 &&
                pose_2.depth(X_euclidean) > 0 &&
-               residual_1.norm() < std::max(4.0, _map_ACThreshold[I]) &&
-               residual_2.norm() < std::max(4.0, _map_ACThreshold[J]))
+               residual_1.norm() < std::max(4.0, _map_ACThreshold[I]) && // param@L : 4.0
+               residual_2.norm() < std::max(4.0, _map_ACThreshold[J]))   // param@L : 4.0
           {
             ++new_track_count;
             _sfm_data.structure[trackId].X = X_euclidean;

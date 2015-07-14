@@ -327,7 +327,7 @@ int main(int argc, char **argv)
   PairWiseMatches map_GeometricMatches;
 
   ImageCollectionGeometricFilter collectionGeomFilter(feats_provider.get());
-  const double maxResidualError = 4.0;
+  const double maxResidualError = 4.0; // param@L : 4.0
   {
     system::Timer timer;
     std::cout << std::endl << " - GEOMETRIC FILTERING - " << std::endl;
