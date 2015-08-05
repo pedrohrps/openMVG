@@ -64,12 +64,12 @@ public:
     // reserve some memory for faster keypoint saving
     regionsCasted->Features().reserve(50);
     regionsCasted->Descriptors().reserve(50);
-
-    cctag::View cctagView((const unsigned char *) image.data(), image.Width(), image.Height(), image.Depth()*image.Width());
+    
+    const cv::Mat graySrc(cv::Size(image.Width(), image.Height()), CV_8UC1, (unsigned char *) image.data(), cv::Mat::AUTO_STEP);
     
     boost::ptr_list<cctag::ICCTag> cctags;
     
-    cctag::cctagDetection(cctags, 1 ,cctagView._grayView , _nRings);
+    cctag::cctagDetection(cctags,1,graySrc,_nRings);
     
     for (const auto & cctag : cctags)
     {
