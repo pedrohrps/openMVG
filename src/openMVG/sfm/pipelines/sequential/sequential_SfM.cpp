@@ -122,7 +122,120 @@ bool SequentialSfMReconstructionEngine::Process() {
       while (badTrackRejector(4.0) != 0); // param@L : 4.0
     }
   }
-
+  
+  //// @L Transform the data to locate a planar 3D point cloud at (0,0,hRoof)
+  // and the 
+  // Closest orthogonal matrix
+  const std::size_t nPoints = _sfm_data.GetLandmarks().size();
+  Mat3X vX(3,nPoints);
+  std::size_t i=0;
+  for(const auto & landmark : _sfm_data.GetLandmarks())
+  {
+    vX.col(i) = landmark.second.X;
+    ++i;
+  }
+  // Compute the mean of the point cloud
+  Vec3 meanPoints = Vec3::Zero(3,1);
+  for(int i=0 ; i < nPoints ; ++i )
+  {
+    meanPoints +=  vX.col(i);
+  }
+  meanPoints /= nPoints;
+  
+  // Center the point cloud in [0;0;0]
+  for(int i=0 ; i < nPoints ; ++i )
+  {
+    vX.col(i) -= meanPoints;
+  }
+  
+  const std::size_t nCameras = _sfm_data.GetPoses().size();
+  Mat3X vCamCenter(3,nCameras);
+  i=0;
+  for(const auto & pose : _sfm_data.GetPoses())
+  {
+    vCamCenter.col(i) = pose.second.center() - meanPoints;
+    ++i;
+  }
+  
+  // Perform an svd over vX*vXT
+  Mat3 dum = vX * vX.transpose();
+  Eigen::JacobiSVD<Mat3> svd(dum,Eigen::ComputeFullV|Eigen::ComputeFullU);
+  Mat3 U = svd.matrixU();
+  
+  // Check wheter the determinant is negative in order to keep
+  // a direct coordinate system
+  if ( U.determinant() < 0 )
+  {
+    U.col(2) = -U.col(2);
+  }
+  
+  // Center the point cloud in [0;0;0]
+  for(int i=0 ; i < nPoints ; ++i )
+  {
+    vX.col(i) = U.transpose() * vX.col(i);
+  }
+  // Center the camera centers
+  for(int i=0 ; i < nCameras ; ++i )
+  {
+    vCamCenter.col(i) = U.transpose() * vCamCenter.col(i);
+  }
+  
+  // Compute the maximal distance between the two farthest points
+  double dMax = 0;
+  for(int i=0 ; i < nPoints ; ++i )
+  {
+    for(int j=0 ; j < nPoints ; ++j )
+    {
+      double dP1P2 = Vec3(vX.col(i) - vX.col(j)).norm();
+      if ( dP1P2 > dMax)
+      {
+        dMax = dP1P2;
+      }
+    }
+  }
+  
+  // Parameter 1 to set
+  const double farthestDistanceInStorStua = 5; // to be adapted to the scale factor in MindCraft
+  const double scaleFactor = farthestDistanceInStorStua/dMax;
+  
+  // Point cloud scaling
+  vX *= scaleFactor;
+  vCamCenter *= scaleFactor;
+  
+  // Cameras used for the acquisition are located below the markers/ceiling
+  // Therefore, z-camera centers are supposed to be negative, the point cloud
+  // being centered in (0,0,0), the z axis pointing up.
+  if ( vCamCenter.col(0)[2] > 0 )
+  {
+    Mat3 flip = Eigen::MatrixXd::Identity(3,3);
+    flip(0,0) = -flip(0,0);
+    flip(2,2) = -flip(2,2);
+    
+    for(int i=0 ; i < nPoints ; ++i )
+      vX.col(i) = flip * vX.col(i);
+    
+    for(int i=0 ; i < nCameras ; ++i )
+      vCamCenter.col(i) = flip * vCamCenter.col(i);
+  }
+  
+  // Point cloud translation to the ceiling
+  // Parameter 2 to set
+  const double heightStorStua = 5;
+  // Center the point cloud in [0;0;0]
+  for(int i=0 ; i < nPoints ; ++i )
+  {
+    vX.col(i) += Vec3(0,0,heightStorStua);
+    
+  }
+  
+  i=0;
+  for( auto & landmark : _sfm_data.structure )
+  {
+    landmark.second.X = vX.col(i);
+    ++i;
+  }
+  //// @L Transform the data to locate a planar 3D point cloud at (0,0,hRoof)
+  
   //-- Reconstruction done.
   //-- Display some statistics
   std::cout << "\n\n-------------------------------" << "\n"
