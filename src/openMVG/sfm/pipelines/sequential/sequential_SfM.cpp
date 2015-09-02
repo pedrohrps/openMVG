@@ -195,7 +195,7 @@ bool SequentialSfMReconstructionEngine::Process() {
   }
   
   // Parameter 1 to set
-  const double farthestDistanceInStorStua = 5; // to be adapted to the scale factor in MindCraft
+  const double farthestDistanceInStorStua = 25; // to be adapted to the scale factor in MindCraft
   const double scaleFactor = farthestDistanceInStorStua/dMax;
   
   // Point cloud scaling
@@ -220,13 +220,13 @@ bool SequentialSfMReconstructionEngine::Process() {
   
   // Point cloud translation to the ceiling
   // Parameter 2 to set
-  const double heightStorStua = 5;
-  // Center the point cloud in [0;0;0]
-  for(int i=0 ; i < nPoints ; ++i )
-  {
-    vX.col(i) += Vec3(0,0,heightStorStua);
-    
-  }
+//  const double heightStorStua = 5;
+//  // Center the point cloud in [0;0;0]
+//  for(int i=0 ; i < nPoints ; ++i )
+//  {
+//    vX.col(i) += Vec3(0,0,heightStorStua);
+//    
+//  }
   
   i=0;
   for( auto & landmark : _sfm_data.structure )
