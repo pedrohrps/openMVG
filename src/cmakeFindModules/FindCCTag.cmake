@@ -15,7 +15,7 @@
 
 MESSAGE(STATUS "Looking for CCTag.")
 
-FIND_PATH(CCTAG_INCLUDE_DIR cctag/CCTag.hpp
+FIND_PATH(CCTAG_INCLUDE_DIR cctag/ICCTag.hpp
   HINTS
   $ENV{CCTAG_DIR}/include
   ${CCTAG_DIR}/include
