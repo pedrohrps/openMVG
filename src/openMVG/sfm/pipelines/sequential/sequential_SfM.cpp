@@ -182,6 +182,8 @@ bool SequentialSfMReconstructionEngine::Process() {
   
   // Compute the maximal distance between the two farthest points
   double dMax = 0;
+  std::size_t iMax = 0;
+  std::size_t jMax = 0;
   for(int i=0 ; i < nPoints ; ++i )
   {
     for(int j=0 ; j < nPoints ; ++j )
@@ -190,6 +192,8 @@ bool SequentialSfMReconstructionEngine::Process() {
       if ( dP1P2 > dMax)
       {
         dMax = dP1P2;
+        iMax = i;
+        jMax = j;
       }
     }
   }
@@ -218,8 +222,8 @@ bool SequentialSfMReconstructionEngine::Process() {
       vCamCenter.col(i) = flip * vCamCenter.col(i);
   }
   
-  // Point cloud translation to the ceiling
-  // Parameter 2 to set
+//  // Point cloud translation to the ceiling
+//  // Parameter 2 to set
 //  const double heightStorStua = 5;
 //  // Center the point cloud in [0;0;0]
 //  for(int i=0 ; i < nPoints ; ++i )
@@ -227,6 +231,33 @@ bool SequentialSfMReconstructionEngine::Process() {
 //    vX.col(i) += Vec3(0,0,heightStorStua);
 //    
 //  }
+  
+  // Centering based on the middle of the diagonal
+  Vec3 ptMiddle = Vec3(vX.col(iMax) + vX.col(jMax))/2;
+  for(int i=0 ; i < nPoints ; ++i )
+    vX.col(i) -= ptMiddle;
+    
+  for(int i=0 ; i < nCameras ; ++i )
+    vCamCenter.col(i) -= ptMiddle; 
+  
+  // 2D rotation to align to the square [-xmin -ymin +xmax +ymax]
+  double thetaAlign = -atan2(vX(1,iMax),vX(0,iMax)) + M_PI/4;
+  double cosAlign = cos(thetaAlign);
+  double sinAlign = sin(thetaAlign);
+
+  Mat3 alignSquareRot = Eigen::MatrixXd::Identity(3,3);
+  alignSquareRot(0,0) = cosAlign;
+  alignSquareRot(0,1) = -sinAlign;
+  alignSquareRot(1,0) = sinAlign;
+  alignSquareRot(1,1) = cosAlign;
+  
+  for(int i=0 ; i < nPoints ; ++i )
+    vX.col(i) = alignSquareRot * vX.col(i);
+    
+  for(int i=0 ; i < nCameras ; ++i )
+    vCamCenter.col(i) = alignSquareRot * vCamCenter.col(i);
+  
+  // End of the transformations
   
   i=0;
   for( auto & landmark : _sfm_data.structure )
