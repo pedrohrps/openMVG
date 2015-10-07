@@ -199,7 +199,7 @@ bool SequentialSfMReconstructionEngine::Process() {
   }
   
   // Parameter 1 to set
-  const double farthestDistanceInStorStua = 25; // to be adapted to the scale factor in MindCraft
+  const double farthestDistanceInStorStua = 2*sqrt(2); // to be adapted to the scale factor in MindCraft
   const double scaleFactor = farthestDistanceInStorStua/dMax;
   
   // Point cloud scaling
@@ -256,6 +256,8 @@ bool SequentialSfMReconstructionEngine::Process() {
     
   for(int i=0 ; i < nCameras ; ++i )
     vCamCenter.col(i) = alignSquareRot * vCamCenter.col(i);
+  
+  std::cout << " points 1 " << vX.col(iMax) << " points 2 " << vX.col(jMax) << std::endl;
   
   // End of the transformations
   
