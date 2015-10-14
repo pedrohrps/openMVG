@@ -123,6 +123,7 @@ bool SequentialSfMReconstructionEngine::Process() {
     }
   }
   
+#ifdef POINTS_ON_THE_CEILING
   // todo@L: dedicated to a scene where markers are coplanar and put on the ceiling
   //// @L Transform the data to locate a planar 3D point cloud at (0,0,hRoof)
   // and the 
@@ -267,6 +268,7 @@ bool SequentialSfMReconstructionEngine::Process() {
     ++i;
   }
   //// @L Transform the data to locate a planar 3D point cloud at (0,0,hRoof)
+#endif // POINTS_ON_THE_CEILING
   
   //-- Reconstruction done.
   //-- Display some statistics
