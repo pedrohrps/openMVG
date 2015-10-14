@@ -409,7 +409,7 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
     std::cout << std::endl << "Track filtering" << std::endl;
     tracksBuilder.Filter();
     std::cout << std::endl << "Track filtering : min occurence" << std::endl;
-    tracksBuilder.FilterPairWiseMinimumMatches(2); // param@L : 20
+    tracksBuilder.FilterPairWiseMinimumMatches(3); // param@L : 20
     std::cout << std::endl << "Track export to internal struct" << std::endl;
     //-- Build tracks with STL compliant type :
     tracksBuilder.ExportToSTL(_map_tracks);
