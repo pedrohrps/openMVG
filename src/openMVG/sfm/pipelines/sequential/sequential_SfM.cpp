@@ -123,6 +123,7 @@ bool SequentialSfMReconstructionEngine::Process() {
     }
   }
   
+  // todo@L: dedicated to a scene where markers are coplanar and put on the ceiling
   //// @L Transform the data to locate a planar 3D point cloud at (0,0,hRoof)
   // and the 
   // Closest orthogonal matrix
@@ -257,9 +258,7 @@ bool SequentialSfMReconstructionEngine::Process() {
   for(int i=0 ; i < nCameras ; ++i )
     vCamCenter.col(i) = alignSquareRot * vCamCenter.col(i);
   
-  std::cout << " points 1 " << vX.col(iMax) << " points 2 " << vX.col(jMax) << std::endl;
-  
-  // End of the transformations
+  /// End of the transformations // todo@L: dedicated to a scene where markers are coplanar and put on the ceiling
   
   i=0;
   for( auto & landmark : _sfm_data.structure )

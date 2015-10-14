@@ -1,7 +1,7 @@
 #include "CCTAG_describer.hpp"
 
-//#define CPU_ADAPT_OF_GPU_PART
-#ifdef CPU_ADAPT_OF_GPU_PART
+//#define CPU_ADAPT_OF_GPU_PART //todo: #ifdef depreciated
+#ifdef CPU_ADAPT_OF_GPU_PART    
   #include "cctag/progBase/MemoryPool.hpp"
 #endif
 
@@ -30,7 +30,7 @@ bool CCTAG_Image_describer::Describe(const image::Image<unsigned char>& image,
     //cv::Mat invertImg;
     //cv::bitwise_not(graySrc,invertImg);
     cctag::cctagDetection(cctags,1,graySrc,_params);
-#else
+#else //todo: #ifdef depreciated
     cctag::MemoryPool::instance().updateMemoryAuthorizedWithRAM();
     cctag::View cctagView((const unsigned char *) image.data(), image.Width(), image.Height(), image.Depth()*image.Width());
     boost::ptr_list<cctag::ICCTag> cctags;
