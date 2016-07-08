@@ -91,8 +91,8 @@ int main(int argc, char** argv)
     POPART_COUT("Program called with the following parameters:");
     POPART_COUT("\timportFile: " << importFile);
     POPART_COUT("\texportFile: " << exportFile);
-    POPART_COUT("\trigFile: " << importFile);
-    POPART_COUT("\tcalibFile: " << exportFile);
+    POPART_COUT("\trigFile: " << rigFile);
+    POPART_COUT("\tcalibFile: " << calibFile);
 
   }
 
@@ -109,9 +109,9 @@ int main(int argc, char** argv)
   SfM_Data sfmData;
   Load(sfmData, importFile, ESfM_Data(flags));
 
-  // Loop through poses and add rig transformation
   POPART_COUT("Updating poses.");
-  for (auto p : sfmData.poses)
+  // Loop through poses and add rig transformation
+  for (auto &p : sfmData.poses)
   {
     const openMVG::geometry::Pose3 rigPose = extrinsics[0].inverse() * p.second;
     p.second = rigPose;
@@ -125,7 +125,7 @@ int main(int argc, char** argv)
     std::shared_ptr<cameras::IntrinsicBase> intrinsics = std::make_shared<openMVG::cameras::Pinhole_Intrinsic_Radial_K3>(v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
 
     POPART_COUT("Updating intrinsics.");
-    for (auto i : sfmData.intrinsics)
+    for (auto &i : sfmData.intrinsics)
     {
       i.second = intrinsics;
     }
